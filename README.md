@@ -329,21 +329,3 @@ User "1" --> "0..*" Review
 User "1" --> "0..*" Report
 User "1" --> "0..*" VerificationRequest
 User "1" --> "0..*" Notification
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img width="1475" height="728" alt="Screenshot 2026-09-14 174603" src="https://github.com/user-attachments/assets/bd357949-e750-4c25-90fd-be127be65b9c" />
