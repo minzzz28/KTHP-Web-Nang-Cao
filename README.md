@@ -12,4 +12,4 @@
 
 ## Câu 2: Đề tài
 
-Xây dựng hệ thống tìm phòng trọ cho sinh viên.
+XÂY DỰNG HỆ THỐNG QUẢN LÝ VÀ TÌM KIẾM PHÒNG TRỌ DÀNH CHO SINH VIÊN.
