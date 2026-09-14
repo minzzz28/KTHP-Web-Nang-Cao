@@ -1,13 +1,15 @@
 # KTHP-Web-Nang-Cao
-Câu 1 
-Thành viên 
 
--LÊ ANH MINH 23010228
-- HÀ ĐỨC THẮNG 23010284
+## Câu 1: Thành viên
 
-ten git:
-minzzz28
-Thangha9900
+- **LÊ ANH MINH** - 23010228
+- **HÀ ĐỨC THẮNG** - 23010284
 
-Cau 2
- Xây Dựng Hệ Thống tìm phòng trọ cho sinh viên
+### Tên GitHub
+
+- `minzzz28`
+- `Thangha9900`
+
+## Câu 2: Đề tài
+
+Xây dựng hệ thống tìm phòng trọ cho sinh viên.
