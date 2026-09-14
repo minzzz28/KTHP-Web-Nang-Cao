@@ -329,3 +329,6 @@ User "1" --> "0..*" Review
 User "1" --> "0..*" Report
 User "1" --> "0..*" VerificationRequest
 User "1" --> "0..*" Notification
+
+
+<img width="1475" height="728" alt="image" src="https://github.com/user-attachments/assets/1b0d8251-1653-4873-9f96-4e7cfa57d73b" />
