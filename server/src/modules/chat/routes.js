@@ -1,5 +1,0 @@
-const express = require('express'); const { authenticate } = require('../../middleware/auth.middleware'); const { validate } = require('../../middleware/validate.middleware'); const controller = require('./controller'); const { directSchema, directCompatibilitySchema, messageSchema, messageUpdateSchema, listSchema } = require('./validator');
-const router = express.Router(); router.use(authenticate);
-router.get('/', validate(listSchema, 'query'), controller.list); router.post('/', validate(directCompatibilitySchema), controller.createDirect); router.post('/direct', validate(directSchema), controller.createDirect);
-router.get('/:id', controller.show); router.get('/:id/messages', validate(listSchema, 'query'), controller.messages); router.post('/:id/messages', validate(messageSchema), controller.send); router.patch('/:id/messages/:messageId', validate(messageUpdateSchema), controller.edit); router.delete('/:id/messages/:messageId', controller.remove);
-module.exports = { chatRouter: router };
