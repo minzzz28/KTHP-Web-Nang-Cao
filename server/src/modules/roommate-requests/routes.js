@@ -1,0 +1,14 @@
+const express = require('express');
+const { authenticate, authorize } = require('../../middleware/auth.middleware');
+const { validate } = require('../../middleware/validate.middleware');
+const controller = require('./controller');
+const { requestSchema, listSchema, responseSchema, compatibilityUpdateSchema } = require('./validator');
+const router = express.Router();
+router.use(authenticate, authorize('STUDENT'));
+router.get('/', validate(listSchema, 'query'), controller.list);
+router.get('/sent', validate(listSchema, 'query'), controller.sent);
+router.get('/received', validate(listSchema, 'query'), controller.received);
+router.post('/', validate(requestSchema), controller.create);
+router.post('/:id/action', validate(responseSchema), controller.respond);
+router.patch('/:id', validate(compatibilityUpdateSchema), controller.update);
+module.exports = { roommateRequestsRouter: router };

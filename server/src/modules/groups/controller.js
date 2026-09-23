@@ -1,0 +1,11 @@
+const { asyncHandler } = require('../../utils/asyncHandler'); const { success, created } = require('../../utils/response'); const service = require('./service');
+const list = asyncHandler(async (req, res) => success(res, await (req.query.mine ? service.mine(req.user, req.query) : service.list(req.query))));
+const mine = asyncHandler(async (req, res) => success(res, await service.mine(req.user, req.query)));
+const show = asyncHandler(async (req, res) => success(res, { data: await service.get(req.params.id) }));
+const create = asyncHandler(async (req, res) => created(res, { message: 'Đã tạo nhóm thuê trọ', data: await service.create(req.user, req.body) }));
+const update = asyncHandler(async (req, res) => success(res, { message: 'Đã cập nhật nhóm', data: await service.update(req.user, req.params.id, req.body) }));
+const addMember = asyncHandler(async (req, res) => created(res, { message: 'Đã thêm thành viên', data: await service.addMember(req.user, req.params.id, req.body) }));
+const leave = asyncHandler(async (req, res) => { await service.leave(req.user, req.params.id); return success(res, { message: 'Đã rời nhóm' }); });
+const removeMember = asyncHandler(async (req, res) => { await service.removeMember(req.user, req.params.id, req.params.studentId); return success(res, { message: 'Đã xóa thành viên khỏi nhóm' }); });
+const transfer = asyncHandler(async (req, res) => success(res, { message: 'Đã chuyển quyền trưởng nhóm', data: await service.transferLeadership(req.user, req.params.id, req.body) }));
+module.exports = { list, mine, show, create, update, addMember, leave, removeMember, transfer };

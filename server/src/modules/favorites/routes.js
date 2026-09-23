@@ -1,0 +1,11 @@
+const express = require('express');
+const { authenticate, authorize } = require('../../middleware/auth.middleware');
+const { validate } = require('../../middleware/validate.middleware');
+const controller = require('./controller');
+const { favoriteSchema, listFavoritesSchema } = require('./validator');
+const router = express.Router();
+router.use(authenticate, authorize('STUDENT'));
+router.get('/', validate(listFavoritesSchema, 'query'), controller.list);
+router.post('/', validate(favoriteSchema), controller.add);
+router.delete('/:roomId', controller.remove);
+module.exports = { favoritesRouter: router };

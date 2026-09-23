@@ -1,0 +1,12 @@
+const express = require('express');
+const { authenticate, authorize } = require('../../middleware/auth.middleware');
+const { validate } = require('../../middleware/validate.middleware');
+const controller = require('./controller');
+const { profileSchema, profileUpdateSchema, roommateListSchema } = require('./validator');
+const router = express.Router();
+router.get('/', validate(roommateListSchema, 'query'), controller.list);
+router.get('/me', authenticate, authorize('STUDENT'), controller.mine);
+router.post('/me', authenticate, authorize('STUDENT'), validate(profileSchema), controller.create);
+router.patch('/me', authenticate, authorize('STUDENT'), validate(profileUpdateSchema), controller.update);
+router.get('/:studentId/match', authenticate, authorize('STUDENT'), controller.match);
+module.exports = { roommatesRouter: router };
