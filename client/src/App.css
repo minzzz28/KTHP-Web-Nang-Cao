@@ -1,0 +1,292 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  background: #f8f9fa;
+}
+
+.navigation {
+  width: min(100% - 48px, 1120px);
+  min-height: 58px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.brand,
+.nav-link,
+.nav-options summary {
+  color: #333;
+  text-decoration: none;
+}
+
+.brand {
+  margin-right: 2px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.nav-link,
+.nav-options summary {
+  color: #555;
+  font-size: 14px;
+}
+
+.nav-link:hover,
+.nav-options summary:hover,
+.brand:hover {
+  color: #008f96;
+}
+
+.nav-options {
+  position: relative;
+}
+
+.nav-options summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.nav-options summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-options summary::after {
+  content: '';
+  display: inline-block;
+  margin: 0 0 3px 7px;
+  border: 4px solid transparent;
+  border-top-color: currentColor;
+  transform: translateY(2px);
+}
+
+.options-menu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 12px);
+  left: -12px;
+  min-width: 145px;
+  padding: 8px 0;
+  border: 1px solid #e4e7e9;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 10%);
+}
+
+.options-menu a {
+  display: block;
+  padding: 8px 12px;
+  color: #444;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.options-menu a:hover {
+  background: #f2f8f8;
+}
+
+main {
+  flex: 1;
+}
+
+.banner {
+  position: relative;
+  min-height: 178px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(108deg, #19c4c5 0%, #008e92 51%, #e8f7f6 100%);
+}
+
+.banner-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: #fff;
+  opacity: 0.27;
+}
+
+.banner-art polygon:nth-child(3n) {
+  opacity: 0.45;
+}
+
+.banner-art polygon:nth-child(3n + 1) {
+  opacity: 0.65;
+}
+
+.banner-copy {
+  position: relative;
+  z-index: 1;
+  padding: 20px 48px 34px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.banner-copy h1 {
+  margin: 0 0 7px;
+  font-size: clamp(22px, 2.2vw, 26px);
+  font-weight: 500;
+}
+
+.banner-copy p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.banner-arrow {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  width: 42px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  color: rgb(255 255 255 / 75%);
+  background: transparent;
+  font-size: 38px;
+  font-weight: 200;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.banner-arrow:hover {
+  color: #fff;
+}
+
+.banner-arrow--previous {
+  left: max(5%, calc((100% - 1120px) / 2));
+}
+
+.banner-arrow--next {
+  right: max(5%, calc((100% - 1120px) / 2));
+}
+
+.banner-dots {
+  position: absolute;
+  z-index: 1;
+  bottom: 22px;
+  left: 50%;
+  display: flex;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.banner-dot {
+  width: 26px;
+  height: 3px;
+  padding: 0;
+  border: 0;
+  background: rgb(255 255 255 / 55%);
+  cursor: pointer;
+}
+
+.banner-dot.is-active {
+  background: #fff;
+}
+
+.content {
+  width: min(100% - 32px, 1120px);
+  margin: 0 auto;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #252a2d;
+  font-size: 14px;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border: 1px solid #d9dee2;
+}
+
+th {
+  background: #fff;
+  font-weight: 700;
+}
+
+tbody tr:nth-child(even) {
+  background: #f0f0f0;
+}
+
+.table-message {
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.table-error {
+  color: #8a2727;
+}
+
+.retry-button {
+  margin-left: 6px;
+  padding: 4px 9px;
+  border: 1px solid #008f96;
+  border-radius: 4px;
+  color: #00777d;
+  background: white;
+  cursor: pointer;
+}
+
+.status-badge {
+  color: inherit;
+}
+
+.site-footer {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #43484b;
+  font-size: 14px;
+}
+
+.site-footer svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+@media (max-width: 520px) {
+  .navigation {
+    width: calc(100% - 32px);
+    min-height: 54px;
+    gap: 15px;
+  }
+
+  .brand {
+    margin-right: auto;
+  }
+
+  .banner {
+    min-height: 165px;
+  }
+
+  .banner-arrow--previous {
+    left: 4px;
+  }
+
+  .banner-arrow--next {
+    right: 4px;
+  }
+
+  .content {
+    width: calc(100% - 16px);
+  }
+}
