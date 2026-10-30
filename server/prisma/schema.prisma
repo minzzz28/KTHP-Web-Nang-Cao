@@ -1,0 +1,899 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  LANDLORD
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationType {
+  STUDENT
+  LANDLORD
+}
+
+enum RoomType {
+  PRIVATE_ROOM
+  SHARED_ROOM
+  STUDIO
+  APARTMENT
+  DORMITORY
+}
+
+enum RoomStatus {
+  AVAILABLE
+  RESERVED
+  RENTED
+  MAINTENANCE
+  HIDDEN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum SocialPreference {
+  QUIET
+  BALANCED
+  SOCIAL
+}
+
+enum RoommatePostStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum RoommateRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum RentalGroupStatus {
+  OPEN
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+enum GroupMemberRole {
+  LEADER
+  MEMBER
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+}
+
+enum ViewingAppointmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  RESCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoiceItemType {
+  RENT
+  ELECTRICITY
+  WATER
+  INTERNET
+  PARKING
+  SERVICE
+  OTHER
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+}
+
+enum ReportTargetType {
+  ROOM
+  USER
+  ROOMMATE_POST
+  REVIEW
+}
+
+enum ReportReason {
+  WRONG_INFO
+  WRONG_IMAGE
+  WRONG_PRICE
+  ROOM_UNAVAILABLE
+  WRONG_ADDRESS
+  SCAM
+  FAKE_ACCOUNT
+  INAPPROPRIATE_CONTENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  PROCESSING
+  RESOLVED
+  REJECTED
+}
+
+enum NotificationType {
+  ROOM_MATCH
+  PRICE_CHANGED
+  ROOMMATE_REQUEST
+  ROOMMATE_REQUEST_RESPONSE
+  MESSAGE
+  APPOINTMENT
+  CONTRACT
+  INVOICE
+  VERIFICATION
+  REPORT
+}
+
+enum NearbyPlaceCategory {
+  MARKET
+  SUPERMARKET
+  PHARMACY
+  HOSPITAL
+  BUS_STOP
+  RESTAURANT
+  CONVENIENCE_STORE
+  SCHOOL
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  username           String?            @unique @db.VarChar(30)
+  email              String?            @unique @db.VarChar(191)
+  passwordHash       String             @map("password_hash") @db.VarChar(255)
+  fullName           String             @map("full_name") @db.VarChar(120)
+  phone              String?            @unique @db.VarChar(30)
+  avatarUrl          String?            @map("avatar_url") @db.VarChar(500)
+  role               UserRole
+  status             UserStatus         @default(ACTIVE)
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  studentProfile              StudentProfile?
+  landlordProfile             LandlordProfile?
+  verificationRequests        VerificationRequest[] @relation("VerificationRequester")
+  reviewedVerificationRequests VerificationRequest[] @relation("VerificationReviewer")
+  properties                  Property[]            @relation("PropertyLandlord")
+  favorites                   Favorite[]
+  roomViews                   RoomView[]
+  roommateProfile             RoommateProfile?
+  roommatePosts               RoommatePost[]
+  sentRoommateRequests        RoommateRequest[]     @relation("RoommateRequestSender")
+  receivedRoommateRequests    RoommateRequest[]     @relation("RoommateRequestRecipient")
+  createdRentalGroups         RentalGroup[]         @relation("RentalGroupCreator")
+  groupMemberships            GroupMember[]
+  conversationMemberships     ConversationMember[]
+  sentMessages                Message[]             @relation("MessageSender")
+  requestedAppointments       ViewingAppointment[]  @relation("ViewingAppointmentStudent")
+  managedAppointments         ViewingAppointment[]  @relation("ViewingAppointmentLandlord")
+  landlordContracts           Contract[]            @relation("ContractLandlord")
+  contractTenancies           ContractTenant[]      @relation("ContractTenantStudent")
+  authoredReviews             Review[]              @relation("ReviewAuthor")
+  landlordReviews             Review[]              @relation("ReviewLandlord")
+  moderatedReviews            Review[]              @relation("ReviewModerator")
+  reportsFiled                Report[]              @relation("ReportReporter")
+  reportsAgainst              Report[]              @relation("ReportTargetUser")
+  reportsReviewed             Report[]              @relation("ReportReviewer")
+  notifications               Notification[]
+  roomPriceChanges            RoomPriceHistory[]    @relation("RoomPriceChangedBy")
+
+  @@index([role, status])
+  @@index([verificationStatus])
+  @@map("users")
+}
+
+model StudentProfile {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique @map("user_id")
+  studentCode     String?  @unique @map("student_code") @db.VarChar(50)
+  universityId    Int?     @map("university_id")
+  schoolEmail     String?  @unique @map("school_email") @db.VarChar(191)
+  faculty         String?  @db.VarChar(120)
+  academicYear    String?  @map("academic_year") @db.VarChar(30)
+  hometown        String?  @db.VarChar(120)
+  bio             String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  university University? @relation(fields: [universityId], references: [id], onDelete: SetNull)
+
+  @@index([universityId])
+  @@map("student_profiles")
+}
+
+model LandlordProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  businessName   String?  @map("business_name") @db.VarChar(191)
+  nationalId     String?  @unique @map("national_id") @db.VarChar(32)
+  contactAddress String?  @map("contact_address") @db.VarChar(500)
+  bio            String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("landlord_profiles")
+}
+
+model VerificationRequest {
+  id             Int                @id @default(autoincrement())
+  userId         Int                @map("user_id")
+  reviewedById   Int?               @map("reviewed_by_id")
+  type           VerificationType
+  status         VerificationStatus @default(PENDING)
+  studentCode    String?            @map("student_code") @db.VarChar(50)
+  schoolEmail    String?            @map("school_email") @db.VarChar(191)
+  documentUrl    String?            @map("document_url") @db.VarChar(500)
+  note           String?            @db.Text
+  reviewerNote   String?            @map("reviewer_note") @db.Text
+  reviewedAt     DateTime?          @map("reviewed_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  user       User  @relation("VerificationRequester", fields: [userId], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, createdAt])
+  @@index([reviewedById])
+  @@index([status, createdAt])
+  @@map("verification_requests")
+}
+
+model University {
+  id                Int               @id @default(autoincrement())
+  code              String            @unique @db.VarChar(30)
+  name              String            @unique @db.VarChar(191)
+  address           String            @db.VarChar(500)
+  latitude          Decimal           @db.Decimal(10, 7)
+  longitude         Decimal           @db.Decimal(10, 7)
+  website           String?           @db.VarChar(500)
+  isPrimary         Boolean           @default(false) @map("is_primary")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  studentProfiles  StudentProfile[]
+  roommateProfiles RoommateProfile[]
+
+  @@index([latitude, longitude])
+  @@map("universities")
+}
+
+model Property {
+  id                 Int                @id @default(autoincrement())
+  landlordId         Int                @map("landlord_id")
+  slug               String             @unique @db.VarChar(191)
+  name               String             @db.VarChar(191)
+  description        String?            @db.Text
+  address            String             @db.VarChar(500)
+  ward               String?            @db.VarChar(120)
+  district           String?            @db.VarChar(120)
+  city               String             @default("Hà Nội") @db.VarChar(120)
+  latitude           Decimal            @db.Decimal(10, 7)
+  longitude          Decimal            @db.Decimal(10, 7)
+  rules              String?            @db.Text
+  openingHours       String?            @map("opening_hours") @db.VarChar(120)
+  contactPhone       String?            @map("contact_phone") @db.VarChar(30)
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  landlord     User          @relation("PropertyLandlord", fields: [landlordId], references: [id], onDelete: Restrict)
+  rooms        Room[]
+  nearbyPlaces NearbyPlace[]
+
+  @@index([landlordId])
+  @@index([city, district])
+  @@index([latitude, longitude])
+  @@index([verificationStatus])
+  @@map("properties")
+}
+
+model Room {
+  id               Int        @id @default(autoincrement())
+  propertyId       Int        @map("property_id")
+  code             String     @db.VarChar(50)
+  name             String     @db.VarChar(191)
+  description      String?    @db.Text
+  price            Decimal    @db.Decimal(12, 2)
+  deposit          Decimal    @db.Decimal(12, 2)
+  area             Decimal    @db.Decimal(8, 2)
+  capacity         Int
+  availableSlots   Int        @map("available_slots")
+  type             RoomType
+  status           RoomStatus @default(AVAILABLE)
+  electricityPrice Decimal    @map("electricity_price") @db.Decimal(12, 2)
+  waterPrice       Decimal    @map("water_price") @db.Decimal(12, 2)
+  internetFee      Decimal    @map("internet_fee") @db.Decimal(12, 2)
+  parkingFee       Decimal    @map("parking_fee") @db.Decimal(12, 2)
+  serviceFee       Decimal    @default(0) @map("service_fee") @db.Decimal(12, 2)
+  locationScore    Decimal?   @map("location_score") @db.Decimal(3, 1)
+  publishedAt      DateTime?  @map("published_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  property        Property               @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  images          RoomImage[]
+  amenities       RoomAmenity[]
+  favorites       Favorite[]
+  priceHistories  RoomPriceHistory[]
+  views           RoomView[]
+  roommatePosts   RoommatePost[]
+  roommateRequests RoommateRequest[]
+  rentalGroups    RentalGroup[]
+  appointments    ViewingAppointment[]
+  contracts       Contract[]
+  reviews         Review[]
+  reports         Report[]
+
+  @@unique([propertyId, code])
+  @@index([propertyId])
+  @@index([price])
+  @@index([status, price])
+  @@index([type, status])
+  @@index([createdAt])
+  @@map("rooms")
+}
+
+model RoomImage {
+  id        Int      @id @default(autoincrement())
+  roomId    Int      @map("room_id")
+  url       String   @db.VarChar(500)
+  altText   String?  @map("alt_text") @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  isCover   Boolean  @default(false) @map("is_cover")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, sortOrder])
+  @@index([roomId, isCover])
+  @@map("room_images")
+}
+
+model Amenity {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique @db.VarChar(100)
+  name      String   @unique @db.VarChar(120)
+  category  String?  @db.VarChar(80)
+  icon      String?  @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rooms RoomAmenity[]
+
+  @@map("amenities")
+}
+
+model RoomAmenity {
+  roomId    Int      @map("room_id")
+  amenityId Int      @map("amenity_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room    Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Restrict)
+
+  @@id([roomId, amenityId])
+  @@index([amenityId])
+  @@map("room_amenities")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  studentId Int      @map("student_id")
+  roomId    Int      @map("room_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  room    Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, roomId])
+  @@index([roomId])
+  @@map("favorites")
+}
+
+model RoomPriceHistory {
+  id          Int      @id @default(autoincrement())
+  roomId      Int      @map("room_id")
+  oldPrice    Decimal? @map("old_price") @db.Decimal(12, 2)
+  newPrice    Decimal  @map("new_price") @db.Decimal(12, 2)
+  changedById Int?     @map("changed_by_id")
+  reason      String?  @db.VarChar(255)
+  changedAt   DateTime @default(now()) @map("changed_at")
+
+  room      Room  @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  changedBy User? @relation("RoomPriceChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([roomId, changedAt])
+  @@index([changedById])
+  @@map("room_price_histories")
+}
+
+model RoomView {
+  id        Int      @id @default(autoincrement())
+  roomId    Int      @map("room_id")
+  viewerId  Int?     @map("viewer_id")
+  sessionId String?  @map("session_id") @db.VarChar(191)
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  room   Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  viewer User? @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, viewedAt])
+  @@index([viewerId, viewedAt])
+  @@map("room_views")
+}
+
+model RoommateProfile {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @unique @map("student_id")
+  universityId      Int?             @map("university_id")
+  gender            Gender
+  hometown          String?          @db.VarChar(120)
+  faculty           String?          @db.VarChar(120)
+  academicYear      String?          @map("academic_year") @db.VarChar(30)
+  budgetMin         Decimal          @map("budget_min") @db.Decimal(12, 2)
+  budgetMax         Decimal          @map("budget_max") @db.Decimal(12, 2)
+  preferredArea     String?          @map("preferred_area") @db.VarChar(255)
+  maxDistanceKm     Decimal?         @map("max_distance_km") @db.Decimal(5, 2)
+  isSmoking         Boolean          @default(false) @map("is_smoking")
+  acceptsSmoking    Boolean          @default(false) @map("accepts_smoking")
+  hasPets           Boolean          @default(false) @map("has_pets")
+  acceptsPets       Boolean          @default(false) @map("accepts_pets")
+  cooksOften        Boolean          @default(false) @map("cooks_often")
+  sleepTime         String?          @map("sleep_time") @db.VarChar(5)
+  wakeUpTime        String?          @map("wake_up_time") @db.VarChar(5)
+  cleanlinessLevel  Int              @default(3) @map("cleanliness_level")
+  socialPreference  SocialPreference @default(BALANCED) @map("social_preference")
+  preferredRoommates Int             @default(1) @map("preferred_roommates")
+  bio               String?          @db.Text
+  isVisible         Boolean          @default(true) @map("is_visible")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  student    User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  university University? @relation(fields: [universityId], references: [id], onDelete: SetNull)
+
+  @@index([universityId])
+  @@index([isVisible, budgetMin, budgetMax])
+  @@map("roommate_profiles")
+}
+
+model RoommatePost {
+  id              Int                @id @default(autoincrement())
+  studentId       Int                @map("student_id")
+  roomId          Int?               @map("room_id")
+  title           String             @db.VarChar(191)
+  content         String             @db.Text
+  area            String?            @db.VarChar(255)
+  budgetPerPerson Decimal            @map("budget_per_person") @db.Decimal(12, 2)
+  neededPeople    Int                @map("needed_people")
+  preferredGender Gender?            @map("preferred_gender")
+  moveInDate      DateTime?          @map("move_in_date") @db.Date
+  requirements    String?            @db.Text
+  status          RoommatePostStatus @default(OPEN)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  student  User              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  room     Room?             @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  requests RoommateRequest[]
+  reports  Report[]
+
+  @@index([studentId, status])
+  @@index([roomId])
+  @@index([status, createdAt])
+  @@map("roommate_posts")
+}
+
+model RoommateRequest {
+  id            Int                    @id @default(autoincrement())
+  senderId      Int                    @map("sender_id")
+  recipientId   Int                    @map("recipient_id")
+  postId        Int?                   @map("post_id")
+  roomId        Int?                   @map("room_id")
+  message       String?                @db.Text
+  status        RoommateRequestStatus  @default(PENDING)
+  // Services set this only while PENDING and clear it on a terminal transition.
+  activePairKey String?                @unique @map("active_pair_key") @db.VarChar(191)
+  respondedAt   DateTime?              @map("responded_at")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+
+  sender    User          @relation("RoommateRequestSender", fields: [senderId], references: [id], onDelete: Restrict)
+  recipient User          @relation("RoommateRequestRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+  post      RoommatePost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  room      Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, status])
+  @@index([senderId, status])
+  @@index([postId])
+  @@index([roomId])
+  @@map("roommate_requests")
+}
+
+model RentalGroup {
+  id                Int               @id @default(autoincrement())
+  creatorId         Int               @map("creator_id")
+  roomId            Int?              @map("room_id")
+  name              String            @db.VarChar(191)
+  maxMembers        Int               @map("max_members")
+  budgetPerPerson   Decimal           @map("budget_per_person") @db.Decimal(12, 2)
+  moveInDate        DateTime?         @map("move_in_date") @db.Date
+  rules             String?           @db.Text
+  zaloGroupUrl      String?           @map("zalo_group_url") @db.VarChar(500)
+  telegramGroupUrl  String?           @map("telegram_group_url") @db.VarChar(500)
+  status            RentalGroupStatus @default(OPEN)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  creator      User          @relation("RentalGroupCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  room         Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  members      GroupMember[]
+  conversation Conversation?
+
+  @@index([creatorId])
+  @@index([roomId])
+  @@index([status, moveInDate])
+  @@map("rental_groups")
+}
+
+model GroupMember {
+  id        Int             @id @default(autoincrement())
+  groupId   Int             @map("group_id")
+  studentId Int             @map("student_id")
+  role      GroupMemberRole @default(MEMBER)
+  joinedAt  DateTime        @default(now()) @map("joined_at")
+  leftAt    DateTime?       @map("left_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  group   RentalGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  student User        @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([groupId, studentId])
+  @@index([studentId])
+  @@map("group_members")
+}
+
+model Conversation {
+  id            Int              @id @default(autoincrement())
+  type          ConversationType
+  title         String?          @db.VarChar(191)
+  // DIRECT conversations store sorted participant IDs here; GROUP conversations keep it null.
+  directPairKey String?          @unique @map("direct_pair_key") @db.VarChar(191)
+  rentalGroupId Int?             @unique @map("rental_group_id")
+  lastMessageAt DateTime?        @map("last_message_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  rentalGroup RentalGroup?         @relation(fields: [rentalGroupId], references: [id], onDelete: SetNull)
+  members     ConversationMember[]
+  messages    Message[]
+
+  @@index([type, lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             Int      @id @default(autoincrement())
+  conversationId Int      @map("conversation_id")
+  userId         Int      @map("user_id")
+  lastReadAt     DateTime? @map("last_read_at")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+  leftAt         DateTime? @map("left_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([conversationId, userId])
+  @@index([userId, lastReadAt])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             Int         @id @default(autoincrement())
+  conversationId Int         @map("conversation_id")
+  senderId       Int         @map("sender_id")
+  content        String      @db.Text
+  type           MessageType @default(TEXT)
+  sentAt         DateTime    @default(now()) @map("sent_at")
+  editedAt       DateTime?   @map("edited_at")
+  isDeleted      Boolean     @default(false) @map("is_deleted")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, sentAt])
+  @@index([senderId, sentAt])
+  @@map("messages")
+}
+
+model ViewingAppointment {
+  id          Int                      @id @default(autoincrement())
+  roomId      Int                      @map("room_id")
+  studentId   Int                      @map("student_id")
+  landlordId  Int                      @map("landlord_id")
+  scheduledAt DateTime                 @map("scheduled_at")
+  proposedAt  DateTime?                @map("proposed_at")
+  status      ViewingAppointmentStatus @default(PENDING)
+  studentNote String?                  @map("student_note") @db.Text
+  landlordNote String?                 @map("landlord_note") @db.Text
+  respondedAt DateTime?                @map("responded_at")
+  cancelledAt DateTime?                @map("cancelled_at")
+  createdAt   DateTime                 @default(now()) @map("created_at")
+  updatedAt   DateTime                 @updatedAt @map("updated_at")
+
+  room     Room @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  student  User @relation("ViewingAppointmentStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  landlord User @relation("ViewingAppointmentLandlord", fields: [landlordId], references: [id], onDelete: Restrict)
+
+  @@index([roomId, scheduledAt])
+  @@index([landlordId, status, scheduledAt])
+  @@index([studentId, status, scheduledAt])
+  @@map("viewing_appointments")
+}
+
+model Contract {
+  id             Int            @id @default(autoincrement())
+  contractNumber String         @unique @map("contract_number") @db.VarChar(80)
+  roomId         Int            @map("room_id")
+  landlordId     Int            @map("landlord_id")
+  startDate      DateTime       @map("start_date") @db.Date
+  endDate        DateTime       @map("end_date") @db.Date
+  rent           Decimal        @db.Decimal(12, 2)
+  deposit        Decimal        @db.Decimal(12, 2)
+  terms          String         @db.Text
+  status         ContractStatus @default(DRAFT)
+  signedAt       DateTime?      @map("signed_at")
+  terminatedAt   DateTime?      @map("terminated_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  room      Room             @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  landlord  User             @relation("ContractLandlord", fields: [landlordId], references: [id], onDelete: Restrict)
+  tenants   ContractTenant[]
+  invoices  Invoice[]
+  reviews   Review[]
+
+  @@index([roomId, status])
+  @@index([landlordId, status])
+  @@index([status, endDate])
+  @@map("contracts")
+}
+
+model ContractTenant {
+  id              Int      @id @default(autoincrement())
+  contractId      Int      @map("contract_id")
+  studentId       Int      @map("student_id")
+  isPrimaryTenant Boolean  @default(false) @map("is_primary_tenant")
+  moveInDate      DateTime? @map("move_in_date") @db.Date
+  moveOutDate     DateTime? @map("move_out_date") @db.Date
+  signedAt        DateTime? @map("signed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  student  User     @relation("ContractTenantStudent", fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([contractId, studentId])
+  @@index([studentId])
+  @@map("contract_tenants")
+}
+
+model Invoice {
+  id                   Int           @id @default(autoincrement())
+  invoiceNumber        String        @unique @map("invoice_number") @db.VarChar(80)
+  contractId           Int           @map("contract_id")
+  periodStart          DateTime      @map("period_start") @db.Date
+  periodEnd            DateTime      @map("period_end") @db.Date
+  dueDate              DateTime      @map("due_date") @db.Date
+  electricityStart     Decimal       @default(0) @map("electricity_start") @db.Decimal(12, 2)
+  electricityEnd       Decimal       @default(0) @map("electricity_end") @db.Decimal(12, 2)
+  electricityUsage     Decimal       @default(0) @map("electricity_usage") @db.Decimal(12, 2)
+  electricityUnitPrice Decimal       @default(0) @map("electricity_unit_price") @db.Decimal(12, 2)
+  electricityAmount    Decimal       @default(0) @map("electricity_amount") @db.Decimal(12, 2)
+  waterStart           Decimal       @default(0) @map("water_start") @db.Decimal(12, 2)
+  waterEnd             Decimal       @default(0) @map("water_end") @db.Decimal(12, 2)
+  waterUsage           Decimal       @default(0) @map("water_usage") @db.Decimal(12, 2)
+  waterUnitPrice       Decimal       @default(0) @map("water_unit_price") @db.Decimal(12, 2)
+  waterAmount          Decimal       @default(0) @map("water_amount") @db.Decimal(12, 2)
+  rentAmount           Decimal       @default(0) @map("rent_amount") @db.Decimal(12, 2)
+  internetAmount       Decimal       @default(0) @map("internet_amount") @db.Decimal(12, 2)
+  parkingAmount        Decimal       @default(0) @map("parking_amount") @db.Decimal(12, 2)
+  serviceAmount        Decimal       @default(0) @map("service_amount") @db.Decimal(12, 2)
+  otherAmount          Decimal       @default(0) @map("other_amount") @db.Decimal(12, 2)
+  totalAmount          Decimal       @map("total_amount") @db.Decimal(12, 2)
+  status               InvoiceStatus @default(UNPAID)
+  issuedAt             DateTime      @default(now()) @map("issued_at")
+  paidAt               DateTime?     @map("paid_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  contract Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  items    InvoiceItem[]
+
+  @@unique([contractId, periodStart, periodEnd])
+  @@index([contractId, status, dueDate])
+  @@index([status, dueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          Int             @id @default(autoincrement())
+  invoiceId   Int             @map("invoice_id")
+  type        InvoiceItemType
+  description String          @db.VarChar(255)
+  quantity    Decimal         @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal         @map("unit_price") @db.Decimal(12, 2)
+  amount      Decimal         @db.Decimal(12, 2)
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([invoiceId, type])
+  @@map("invoice_items")
+}
+
+model Review {
+  id               Int          @id @default(autoincrement())
+  contractId       Int          @map("contract_id")
+  studentId        Int          @map("student_id")
+  roomId           Int          @map("room_id")
+  landlordId       Int          @map("landlord_id")
+  rating           Int
+  roomQuality      Int          @map("room_quality")
+  security         Int
+  cleanliness      Int
+  wifiQuality      Int          @map("wifi_quality")
+  utilityPrice     Int          @map("utility_price")
+  listingAccuracy  Int          @map("listing_accuracy")
+  landlordAttitude Int          @map("landlord_attitude")
+  comment          String?      @db.Text
+  status           ReviewStatus @default(PUBLISHED)
+  moderatedById    Int?         @map("moderated_by_id")
+  moderationNote   String?      @map("moderation_note") @db.Text
+  moderatedAt      DateTime?    @map("moderated_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  student     User     @relation("ReviewAuthor", fields: [studentId], references: [id], onDelete: Restrict)
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  landlord    User     @relation("ReviewLandlord", fields: [landlordId], references: [id], onDelete: Restrict)
+  moderatedBy User?    @relation("ReviewModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  reports     Report[]
+
+  @@unique([contractId, studentId])
+  @@index([studentId, createdAt])
+  @@index([roomId, status, createdAt])
+  @@index([landlordId, status])
+  @@map("reviews")
+}
+
+model Report {
+  id             Int              @id @default(autoincrement())
+  reporterId     Int              @map("reporter_id")
+  targetType     ReportTargetType @map("target_type")
+  targetUserId   Int?             @map("target_user_id")
+  roomId         Int?             @map("room_id")
+  roommatePostId Int?             @map("roommate_post_id")
+  reviewId       Int?             @map("review_id")
+  reason         ReportReason
+  description    String?          @db.Text
+  evidenceUrl    String?          @map("evidence_url") @db.VarChar(500)
+  status         ReportStatus     @default(PENDING)
+  reviewedById   Int?             @map("reviewed_by_id")
+  adminNote      String?          @map("admin_note") @db.Text
+  resolvedAt     DateTime?        @map("resolved_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  reporter     User          @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  targetUser   User?         @relation("ReportTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  room         Room?         @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  roommatePost RoommatePost? @relation(fields: [roommatePostId], references: [id], onDelete: SetNull)
+  review       Review?       @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+  reviewedBy   User?         @relation("ReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([reporterId, createdAt])
+  @@index([targetUserId])
+  @@index([roomId])
+  @@index([roommatePostId])
+  @@index([reviewId])
+  @@index([reviewedById])
+  @@index([targetType])
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  type      NotificationType
+  title     String           @db.VarChar(191)
+  content   String           @db.Text
+  linkUrl   String?          @map("link_url") @db.VarChar(500)
+  isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+model NearbyPlace {
+  id             Int                 @id @default(autoincrement())
+  propertyId     Int                 @map("property_id")
+  name           String              @db.VarChar(191)
+  category       NearbyPlaceCategory
+  address        String?             @db.VarChar(500)
+  latitude       Decimal             @db.Decimal(10, 7)
+  longitude      Decimal             @db.Decimal(10, 7)
+  distanceMeters Int?                @map("distance_meters")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, category])
+  @@index([latitude, longitude])
+  @@map("nearby_places")
+}
+
+// Cross-field rules (price/area/capacity ranges, meter deltas, invoice totals,
+// contract dates, rating ranges, role/profile compatibility, and exactly one
+// report target) are validated in services/validators. Prisma/MySQL does not
+// express all of those conditional business invariants in this schema alone.

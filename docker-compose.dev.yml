@@ -1,0 +1,61 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Copy .env.example to .env and set MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER:?Copy .env.example to .env and set MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Copy .env.example to .env and set MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Copy .env.example to .env and set MYSQL_ROOT_PASSWORD}
+    volumes:
+      # This is the existing project database.  Because it is external, Compose
+      # fails instead of silently creating an empty replacement database.
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  dev:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+    init: true
+    user: node
+    working_dir: /workspaces/student-rental-management
+    command: sleep infinity
+    privileged: false
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      CLIENT_URL: http://localhost:5173
+      # Browser traffic stays on port 5173; Vite forwards API and Socket.IO
+      # requests internally to the server on port 4000.
+      VITE_API_URL: /api
+      VITE_SOCKET_URL: ""
+      # Use the existing database through the private Compose network.  No host
+      # port is needed, so a local MySQL service cannot conflict with it.
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      JWT_SECRET: ${JWT_SECRET:?Copy .env.example to .env and set JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      # Bind only to the local machine so the development server is not exposed
+      # to the LAN when the Dev Container is started outside VS Code.
+      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - .:/workspaces/student-rental-management:cached
+      - student_rental_node_modules:/workspaces/student-rental-management/node_modules
+      - student_rental_npm_cache:/home/node/.npm
+volumes:
+  # Do not replace this with a managed volume: it holds the original project data.
+  mysql_data:
+    external: true
+    name: de-xuat-du-an-phong-tro_mysql_data
+  student_rental_node_modules:
+  student_rental_npm_cache:
